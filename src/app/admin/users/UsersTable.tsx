@@ -5,6 +5,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { Search, ShieldAlert, ShieldCheck, Trash2, UserCog } from "lucide-react";
 import { formatDate } from "@/lib/format";
+import { InviteInstructorModal } from "./InviteInstructorModal";
 
 interface U {
   id: string;
@@ -21,6 +22,7 @@ interface U {
 export default function UsersTable({ initial }: { initial: U[] }) {
   const [rows, setRows] = useState(initial);
   const [query, setQuery] = useState("");
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   const refresh = async (q: string) => {
     const res = await fetch(`/api/admin/users?q=${encodeURIComponent(q)}`);
@@ -55,15 +57,30 @@ export default function UsersTable({ initial }: { initial: U[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-        <input
-          placeholder="Search users…"
-          value={query}
-          onChange={(e) => { setQuery(e.target.value); refresh(e.target.value); }}
-          className="w-full rounded-md border-0 py-2 pl-9 pr-3 ring-1 ring-inset ring-border bg-background text-foreground text-sm"
-        />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="relative max-w-sm w-full">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <input
+            placeholder="Search users…"
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); refresh(e.target.value); }}
+            className="w-full rounded-md border-0 py-2 pl-9 pr-3 ring-1 ring-inset ring-border bg-background text-foreground text-sm"
+          />
+        </div>
+        <button 
+          onClick={() => setIsInviteModalOpen(true)}
+          className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 transition-colors shadow-sm"
+        >
+          <UserCog className="h-4 w-4" />
+          Invite Instructor
+        </button>
       </div>
+
+      <InviteInstructorModal 
+        isOpen={isInviteModalOpen} 
+        onClose={() => setIsInviteModalOpen(false)} 
+        onSuccess={() => refresh(query)} 
+      />
 
       <div className="bg-card border border-border rounded-xl shadow-sm overflow-x-auto">
         <table className="w-full text-sm min-w-[720px]">

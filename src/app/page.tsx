@@ -1,87 +1,126 @@
 import Link from "next/link";
-import { ArrowRight, BookOpen, Award, Users, Star, CheckCircle, Sparkles } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { db } from "@/lib/db";
 import { CourseCard } from "@/components/courses/CourseCard";
-import { formatDuration } from "@/lib/format";
-import NewsletterForm from "@/components/forms/NewsletterForm";
-
-const features = [
-  { title: "Read at Your Pace", description: "Our text-based approach lets you skim, deep-read, or review material exactly as you prefer. No more rewinding videos.", icon: BookOpen },
-  { title: "Earn Certificates", description: "Complete courses, pass assessments, and earn verifiable certificates to showcase on your resume or LinkedIn profile.", icon: Award },
-  { title: "Expert Instructors", description: "Learn from vetted industry professionals who bring real-world experience and actionable insights to every lesson.", icon: Users },
-];
-
-const testimonials = [
-  { name: "Sarah Chen", role: "Software Engineer", quote: "The text-based format is perfect for learning on my commute. I finished three courses in a month." },
-  { name: "Marcus Reed", role: "Marketing Manager", quote: "Clear, structured, and genuinely useful. The certificates helped me land my current role." },
-  { name: "Priya Nair", role: "Data Analyst", quote: "Best reading experience of any learning platform I've tried. The progress tracking kept me motivated." },
-];
+import { ShieldCheck } from "lucide-react";
 
 export default async function Home() {
-  const [popular, featured, categories, stats] = await Promise.all([
-    db.course.findMany({ where: { status: "PUBLISHED" }, orderBy: { enrollmentCount: "desc" }, take: 8, include: courseInclude() }),
-    db.course.findMany({ where: { status: "PUBLISHED", isFeatured: true }, take: 4, include: courseInclude() }),
-    db.category.findMany({ where: { isActive: true }, include: { _count: { select: { courses: true } } }, orderBy: { name: "asc" }, take: 8 }),
-    db.$transaction([
-      db.user.count({ where: { role: "STUDENT" } }),
-      db.course.count({ where: { status: "PUBLISHED" } }),
-      db.enrollment.count(),
-      db.certificate.count(),
-    ]),
+  const [popular] = await Promise.all([
+    db.course.findMany({ where: { status: "PUBLISHED" }, orderBy: { enrollmentCount: "desc" }, take: 4, include: courseInclude() }),
   ]);
 
   const showCourses = popular.length ? popular : [];
 
   return (
-    <>
+    <div className="bg-[#fcfbf9] min-h-screen">
       <Navbar />
       <main className="flex-1">
         {/* Hero */}
-        <section className="relative overflow-hidden bg-background py-20 sm:py-32">
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-          <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-primary/20 opacity-20 blur-[100px]"></div>
-          <div className="container relative mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div className="mx-auto max-w-3xl">
-              <h1 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-6xl mb-6">
-                Master New Skills with <span className="text-primary">Eduvia</span>
-              </h1>
-              <p className="text-lg leading-8 text-muted-foreground mb-10">
-                Join learners worldwide. Access high-quality, text-based courses taught by industry experts. Learn at your own pace, anytime, anywhere.
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link href="/courses" className="w-full sm:w-auto rounded-md bg-primary px-8 py-3.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-all flex items-center justify-center gap-2">
-                  Explore Courses <ArrowRight className="h-4 w-4" />
-                </Link>
-                <Link href="/register" className="w-full sm:w-auto rounded-md bg-secondary px-8 py-3.5 text-sm font-semibold text-secondary-foreground shadow-sm hover:bg-secondary/80 border border-border transition-all flex items-center justify-center gap-2">
-                  Join for Free
-                </Link>
+        <section className="relative pt-12 pb-24 overflow-hidden">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col lg:flex-row items-center gap-12">
+              
+              {/* Hero Left */}
+              <div className="lg:w-1/2 z-10">
+                <h1 className="text-5xl lg:text-[72px] font-extrabold tracking-tight text-slate-900 leading-[1.05] mb-6">
+                  Move beyond<br />the limitations of<br />e-Learning.
+                </h1>
+                <p className="text-lg text-slate-500 mb-10 font-medium">
+                  Anytime, anywhere to discover yourself.
+                </p>
+                <div className="flex items-center gap-8">
+                  <Link href="/courses" className="rounded-full bg-blue-600 px-8 py-4 text-sm font-bold text-white shadow-lg shadow-blue-600/30 hover:bg-blue-700 transition-all">
+                    Get Started
+                  </Link>
+                  <Link href="/instructor" className="text-sm font-bold text-slate-900 underline underline-offset-[6px] decoration-2 hover:text-blue-600 transition-colors">
+                    Become an Instructor
+                  </Link>
+                </div>
+              </div>
+
+              {/* Hero Right - Composition */}
+              <div className="lg:w-1/2 relative h-[550px] w-full">
+                {/* Yellow circle background */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[450px] h-[450px] bg-amber-400 rounded-full mix-blend-multiply opacity-20"></div>
+                
+                {/* Main Hero Image placeholder */}
+                <div className="absolute inset-0 flex items-center justify-center z-10">
+                  <div className="w-[320px] h-[450px] bg-amber-400 rounded-t-full rounded-b-3xl overflow-hidden border-8 border-white shadow-2xl relative">
+                     <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=600&auto=format&fit=crop')] bg-cover bg-center"></div>
+                  </div>
+                </div>
+
+                {/* Floating Cards */}
+                <div className="absolute top-16 left-8 z-20 bg-white p-3 rounded-2xl shadow-xl flex items-center gap-3 w-48">
+                  <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                    <img src="https://i.pravatar.cc/150?img=11" alt="Avatar" className="h-full w-full rounded-full" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase leading-tight">Largest collection in</p>
+                    <p className="text-xs font-bold text-slate-800 leading-tight">every courses</p>
+                  </div>
+                </div>
+
+                <div className="absolute top-12 right-12 z-20 bg-white p-4 rounded-3xl shadow-xl text-center w-36">
+                  <span className="inline-block bg-pink-100 text-pink-500 text-[9px] font-extrabold px-2 py-0.5 rounded-full mb-2">NEW</span>
+                  <p className="text-[10px] font-bold text-slate-800 leading-tight">Get 20% off in every courses</p>
+                </div>
+
+                <div className="absolute bottom-16 right-16 z-20 bg-white p-5 rounded-[2rem] shadow-xl text-center min-w-[140px]">
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Students</p>
+                  <p className="text-3xl font-extrabold text-slate-800 mb-2">15k</p>
+                  <div className="flex justify-center -space-x-2">
+                     <img src="https://i.pravatar.cc/150?img=32" className="w-7 h-7 rounded-full border-2 border-white object-cover" />
+                     <img src="https://i.pravatar.cc/150?img=12" className="w-7 h-7 rounded-full border-2 border-white object-cover" />
+                     <img src="https://i.pravatar.cc/150?img=42" className="w-7 h-7 rounded-full border-2 border-white object-cover" />
+                     <div className="w-7 h-7 rounded-full border-2 border-white bg-slate-900 flex items-center justify-center text-[9px] text-white font-bold">+</div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        {/* Features Row */}
+        <section className="bg-white/50 backdrop-blur-sm">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-wrap items-center justify-between py-6 gap-6 max-w-5xl mx-auto border-t border-b border-slate-200/50">
+              <div className="flex items-center gap-3">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-red-100">
+                  <div className="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div>
+                </span>
+                <span className="font-bold text-sm text-slate-700">Online tutoring</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100">
+                  <div className="w-3 h-3 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]"></div>
+                </span>
+                <span className="font-bold text-sm text-slate-700">Lifetime Access</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-100">
+                  <div className="w-3 h-3 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
+                </span>
+                <span className="font-bold text-sm text-slate-700">Active learning</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100">
+                  <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
+                </span>
+                <span className="font-bold text-sm text-slate-700">10k courses</span>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Stats */}
-        <section className="py-10 bg-muted/30 border-y border-border">
-          <div className="container mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            <Stat value={`${stats[1]}+`} label="Courses" />
-            <Stat value={`${stats[0].toLocaleString()}+`} label="Students" />
-            <Stat value={`${stats[2].toLocaleString()}+`} label="Enrollments" />
-            <Stat value={`${stats[3].toLocaleString()}+`} label="Certificates" />
-          </div>
-        </section>
-
         {/* Popular Courses */}
         {showCourses.length > 0 && (
-          <section className="py-20">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex items-end justify-between mb-10">
-                <div>
-                  <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Popular Courses</h2>
-                  <p className="mt-2 text-muted-foreground">Join thousands already learning these topics.</p>
-                </div>
-                <Link href="/courses" className="text-primary font-medium hover:underline hidden sm:block">View all →</Link>
+          <section className="py-24">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
+              <div className="mb-12">
+                <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">Most Popular Courses</h2>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {showCourses.map((c: any) => <CourseCard key={c.id} course={c} />)}
@@ -90,105 +129,79 @@ export default async function Home() {
           </section>
         )}
 
-        {/* Features */}
-        <section className="py-20 bg-muted/30">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-2xl mx-auto mb-16">
-              <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Why learn on Eduvia?</h2>
-              <p className="mt-4 text-lg text-muted-foreground">A distraction-free, text-first learning experience designed for deep comprehension.</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {features.map((f, idx) => (
-                <div key={idx} className="bg-card p-8 rounded-2xl border border-border shadow-sm hover:shadow-md transition-shadow">
-                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-6"><f.icon className="h-6 w-6 text-primary" /></div>
-                  <h3 className="text-xl font-semibold text-foreground mb-3">{f.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed">{f.description}</p>
+        {/* Testimonials (What our Clients Say) */}
+        <section className="py-16 bg-white overflow-hidden">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
+            <div className="flex flex-col lg:flex-row items-center gap-16">
+              
+              {/* Left visual */}
+              <div className="lg:w-[45%] relative">
+                <div className="rounded-[2.5rem] overflow-hidden aspect-[4/5] relative">
+                  <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=800&auto=format&fit=crop" alt="Students learning" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-slate-900/10"></div>
                 </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Categories */}
-        <section className="py-20">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Browse by Category</h2>
-              <p className="mt-3 text-muted-foreground">Find the perfect course across our most popular topics.</p>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {categories.map((c: any) => (
-                <Link key={c.id} href={`/categories/${c.slug}`} className="bg-card border border-border rounded-xl p-5 hover:shadow-md transition-shadow">
-                  <p className="font-semibold">{c.name}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{c._count.courses} courses</p>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Featured */}
-        {featured.length > 0 && (
-          <section className="py-20 bg-muted/30">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex items-center gap-2 mb-10">
-                <Sparkles className="h-6 w-6 text-primary" />
-                <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Featured Courses</h2>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {featured.map((c: any) => <CourseCard key={c.id} course={c} />)}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Testimonials */}
-        <section className="py-20">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12"><h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Loved by learners</h2></div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {testimonials.map((t, i) => (
-                <div key={i} className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-                  <div className="flex items-center gap-1 text-amber-400 mb-3"><Star className="h-4 w-4 fill-amber-400" /><Star className="h-4 w-4 fill-amber-400" /><Star className="h-4 w-4 fill-amber-400" /><Star className="h-4 w-4 fill-amber-400" /><Star className="h-4 w-4 fill-amber-400" /></div>
-                  <p className="text-muted-foreground mb-4">"{t.quote}"</p>
-                  <p className="font-semibold">{t.name}</p>
-                  <p className="text-xs text-muted-foreground">{t.role}</p>
+                
+                {/* Floating card */}
+                <div className="absolute -right-16 top-1/2 -translate-y-1/2 bg-white p-8 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-72 z-10 hidden md:block">
+                  <div className="h-12 w-12 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mb-5">
+                    <ShieldCheck className="h-6 w-6" />
+                  </div>
+                  <h4 className="text-[17px] font-bold text-slate-900 mb-3 leading-tight">100% Safe & Secured</h4>
+                  <p className="text-[13px] text-slate-500 leading-relaxed font-medium">Build a course, build a brand, build a business. Here is what Teachable</p>
                 </div>
-              ))}
-            </div>
-          </div>
-        </section>
+              </div>
 
-        {/* Newsletter */}
-        <section className="py-16 bg-primary">
-          <div className="container mx-auto px-4 max-w-2xl text-center">
-            <h2 className="text-3xl font-bold text-primary-foreground sm:text-4xl mb-3">Never miss a new course</h2>
-            <p className="text-primary-foreground/90 mb-8">Subscribe to the Eduvia newsletter for the best new courses and learning tips.</p>
-            <NewsletterForm />
+              {/* Right content */}
+              <div className="lg:w-[55%] lg:pl-16">
+                <h2 className="text-[32px] font-extrabold text-slate-900 mb-10">What our Clients Say</h2>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 relative">
+                  {/* Card 1 */}
+                  <div className="bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-slate-50 relative z-10">
+                    <p className="text-[13px] text-slate-500 leading-[1.8] font-medium mb-8">
+                      "You only have to know one thing that, you can learn anything Anytime, anywhere to do you discover yourself. Our content will help you every step."
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <img src="https://i.pravatar.cc/150?img=68" alt="Cody Fisher" className="h-10 w-10 rounded-full object-cover" />
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-900">Cody Fisher</h4>
+                        <p className="text-[11px] text-slate-400 font-bold">Student</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Card 2 */}
+                  <div className="bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-slate-50 relative top-10 z-0">
+                    <p className="text-[13px] text-slate-500 leading-[1.8] font-medium mb-8">
+                      "You only have to know one thing that, you can learn anything Anytime, anywhere to do you discover yourself. Our content will help you every step."
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <img src="https://i.pravatar.cc/150?img=47" alt="Dianne Russell" className="h-10 w-10 rounded-full object-cover" />
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-900">Dianne Russell</h4>
+                        <p className="text-[11px] text-slate-400 font-bold">Student</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* CTA */}
-        <section className="py-20">
+        <section className="py-24 mt-10 bg-slate-50">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="bg-card rounded-3xl p-8 sm:p-16 text-center shadow-lg border border-border">
-              <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-4">Ready to start your journey?</h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto text-lg mb-8">Create an account today and get access to courses spanning technology, business, design, and more.</p>
-              <Link href="/register" className="inline-flex items-center justify-center rounded-md bg-primary px-8 py-3.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors">Sign Up Now</Link>
+            <div className="max-w-xl mx-auto text-center">
+              <h2 className="text-[28px] font-extrabold text-slate-900 mb-8">Do you want to be an<br />instructor ?</h2>
+              <Link href="/instructor" className="inline-flex items-center justify-center rounded-[14px] bg-blue-600 px-10 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-colors">
+                Join Us
+              </Link>
             </div>
           </div>
         </section>
       </main>
       <Footer />
-    </>
-  );
-}
-
-function Stat({ value, label }: { value: string; label: string }) {
-  return (
-    <div>
-      <p className="text-3xl font-bold text-foreground">{value}</p>
-      <p className="text-sm text-muted-foreground mt-1">{label}</p>
     </div>
   );
 }
@@ -196,7 +209,7 @@ function Stat({ value, label }: { value: string; label: string }) {
 function courseInclude() {
   return {
     category: { select: { name: true, slug: true } },
-    instructor: { select: { firstName: true, lastName: true } },
+    instructor: { select: { firstName: true, lastName: true, avatar: true } },
     _count: { select: { enrollments: true, modules: true } },
   };
 }

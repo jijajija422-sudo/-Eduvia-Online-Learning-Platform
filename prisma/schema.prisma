@@ -92,6 +92,12 @@ enum InstructorApplicationStatus {
   REJECTED
 }
 
+enum InstructorInviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+}
+
 // ---------------------------------------------------------------------------
 // User & Authentication
 // ---------------------------------------------------------------------------
@@ -130,6 +136,7 @@ model User {
   notes                  Note[]
   wishlistItems          WishlistItem[]
   instructorApplications InstructorApplication[]
+  instructorInvites     InstructorInvite[]
   auditLogs              AuditLog[]
   supportTickets         SupportTicket[]
 
@@ -622,6 +629,25 @@ model InstructorApplication {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+}
+
+model InstructorInvite {
+  id          String                 @id @default(cuid())
+  email       String
+  token       String                 @unique
+  message     String?
+  status      InstructorInviteStatus @default(PENDING)
+  expiresAt   DateTime
+  usedAt      DateTime?
+  invitedById String
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  invitedBy User @relation(fields: [invitedById], references: [id], onDelete: Restrict)
+
+  @@index([email])
+  @@index([token])
+  @@index([status])
 }
 
 // ---------------------------------------------------------------------------

@@ -28,7 +28,11 @@ const publicRoutes = [
   "/become-instructor",
   "/privacy",
   "/terms",
+  "/cookies",
+  "/blog",
+  "/reviews",
   "/unauthorized",
+  "/accept-invite",
   "/verify",
 ];
 
@@ -43,6 +47,7 @@ const publicApiRoutes = [
   "/api/newsletter",
   "/api/support",
   "/api/courses",
+  "/api/invites",
   "/api/categories",
   "/api/subcategories",
   "/api/reviews",
@@ -55,7 +60,8 @@ export async function proxy(request: NextRequest) {
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon.ico") ||
-    publicApiRoutes.includes(pathname)
+    publicApiRoutes.includes(pathname) ||
+    publicApiRoutes.some((r) => pathname.startsWith(`${r}/`))
   ) {
     return NextResponse.next();
   }

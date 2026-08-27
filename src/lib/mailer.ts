@@ -177,7 +177,14 @@ export const emailTemplates = {
       `<p>Hi ${name},</p><p>Your instructor application has been approved. You can now create and publish courses on Eduvia.</p>`
     ),
 
-  newsletter: (name: string) => sendEmailWrap("Welcome to the Eduvia newsletter", `<p>Hi ${name || "there"},</p><p>Thanks for subscribing to the Eduvia newsletter. We'll send you the best new courses and learning tips.</p>`),
+  instructorInvite: (name: string, inviterName: string, url: string, message?: string) =>
+    sendEmailWrap(
+      "You're invited to teach on Eduvia",
+      `<p>Hi ${name || "there"},</p><p><strong>${inviterName}</strong> has invited you to become an instructor on <strong>Eduvia</strong>.${message ? `</p><p style="background:#f8fafc;padding:16px;border-radius:8px;border-left:3px solid #3b82f6;">${message}</p>` : ""}</p><p>Create your instructor account and start building courses today.</p>${button(url, "Accept Invitation")}<p>If the button doesn't work, copy this link: ${url}</p>`
+    ),
+
+  newsletter: (name: string) =>
+    sendEmailWrap("Welcome to the Eduvia newsletter", `<p>Hi ${name || "there"},</p><p>Thanks for subscribing to the Eduvia newsletter. We'll send you the best new courses and learning tips.</p>`),
 
   contact: (name: string, subject: string, message: string) =>
     sendEmailWrap(

@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { Clock, BookOpen, User, Star } from "lucide-react";
+import { User, Star, Eye } from "lucide-react";
 // @ts-ignore
 import type { Course, User as UserType, Category } from "@prisma/client";
 
 type CourseWithRelations = Course & {
   instructor: { firstName: string; lastName: string; avatar: string | null };
   category: { name: string; slug: string };
+  _count?: { enrollments: number; modules: number };
 };
 
 interface CourseCardProps {
@@ -14,9 +15,9 @@ interface CourseCardProps {
 
 export function CourseCard({ course }: CourseCardProps) {
   return (
-    <Link href={`/courses/${course.slug}`} className="group flex flex-col bg-card rounded-2xl border border-border shadow-sm hover:shadow-md transition-all overflow-hidden h-full">
+    <Link href={`/courses/${course.slug}`} className="group flex flex-col bg-white rounded-3xl shadow-sm hover:shadow-lg transition-all overflow-hidden h-full">
       {/* Thumbnail Area */}
-      <div className="relative aspect-video w-full bg-muted overflow-hidden">
+      <div className="relative aspect-[4/3] w-full bg-slate-100 overflow-hidden m-3 rounded-2xl w-[calc(100%-24px)]">
         {course.thumbnail ? (
           <img 
             src={course.thumbnail} 
@@ -24,54 +25,57 @@ export function CourseCard({ course }: CourseCardProps) {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div className="w-full h-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-            <BookOpen className="h-12 w-12 text-primary/40" />
+          <div className="w-full h-full bg-amber-50 flex items-center justify-center">
+            {/* Fallback image */}
+            <div className="text-amber-200">No Image</div>
           </div>
         )}
-        <div className="absolute top-3 left-3 flex gap-2">
-          <span className="inline-flex items-center rounded-full bg-background/90 backdrop-blur-sm px-2.5 py-0.5 text-xs font-semibold text-foreground shadow-sm">
-            {course.category.name}
-          </span>
-        </div>
       </div>
       
       {/* Content Area */}
-      <div className="flex flex-col flex-1 p-5">
-        <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
-          <span className="flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5" />
-            {course.estimatedDuration} mins
-          </span>
-          <span className="flex items-center gap-1.5 capitalize bg-muted px-2 py-0.5 rounded-sm">
-            {course.difficulty.toLowerCase()}
+      <div className="flex flex-col flex-1 px-5 pb-5">
+        
+        {/* Category and Price row */}
+        <div className="flex items-center justify-between mb-3 mt-1">
+          <div className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-amber-400"></span>
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+              {course.category.name}
+            </span>
+          </div>
+          <span className="text-sm font-bold text-blue-600">
+            Free
           </span>
         </div>
         
-        <h3 className="text-lg font-bold text-foreground leading-tight mb-2 group-hover:text-primary transition-colors line-clamp-2">
+        <h3 className="text-[17px] font-bold text-slate-800 leading-tight mb-4 group-hover:text-amber-500 transition-colors line-clamp-2">
           {course.title}
         </h3>
         
-        <p className="text-sm text-muted-foreground line-clamp-2 mb-4 flex-1">
-          {course.shortDescription}
-        </p>
-        
-        <div className="mt-auto pt-4 border-t border-border flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {course.instructor.avatar ? (
-              <img src={course.instructor.avatar} alt={course.instructor.firstName} className="h-6 w-6 rounded-full object-cover" />
-            ) : (
-              <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center">
-                <User className="h-3 w-3 text-muted-foreground" />
-              </div>
-            )}
-            <span className="text-sm font-medium text-foreground">
-              {course.instructor.firstName} {course.instructor.lastName}
-            </span>
+        <div className="mt-auto pt-4 flex items-center justify-between text-slate-500">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5">
+              <User className="h-4 w-4" />
+              <span className="text-xs font-bold">{course._count?.enrollments || 0}k</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Eye className="h-4 w-4" />
+              <span className="text-xs font-bold">{course._count?.modules || 0}k</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Star className="h-4 w-4" />
+              <span className="text-xs font-bold">{course.rating.toFixed(1)}</span>
+            </div>
           </div>
           
-          <div className="flex items-center gap-1 text-sm font-medium text-amber-500">
-            <Star className="h-4 w-4 fill-amber-500 text-amber-500" />
-            <span>{course.rating.toFixed(1)}</span>
+          <div>
+            {course.instructor.avatar ? (
+              <img src={course.instructor.avatar} alt={course.instructor.firstName} className="h-7 w-7 rounded-full object-cover shadow-sm" />
+            ) : (
+              <div className="h-7 w-7 rounded-full bg-slate-200 flex items-center justify-center shadow-sm">
+                <User className="h-3.5 w-3.5 text-slate-500" />
+              </div>
+            )}
           </div>
         </div>
       </div>
