@@ -54,8 +54,7 @@ function RegisterForm() {
       }
 
       toast.success("Account created successfully!");
-      router.push(result.redirectUrl || "/student");
-      router.refresh();
+      window.location.href = result.redirectUrl || "/student";
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
     } finally {

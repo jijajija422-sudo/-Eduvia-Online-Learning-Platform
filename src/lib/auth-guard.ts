@@ -32,6 +32,5 @@ export async function requireRole(
 // ─── Convenience guards ───────────────────────────────────────────────────
 
 export const requireAdmin = () => requireRole("ADMIN");
-export const requireInstructor = () => requireRole(["ADMIN", "INSTRUCTOR"]);
-export const requireStudent = () =>
-  requireRole(["ADMIN", "INSTRUCTOR", "STUDENT"]);
+export const requireInstructor = () => requireRole("INSTRUCTOR");
+export const requireStudent = () => requireRole("STUDENT");

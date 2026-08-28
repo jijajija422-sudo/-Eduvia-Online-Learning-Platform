@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Search, ShoppingCart, Menu, X, LogIn, User } from "lucide-react";
+import { Menu, X, LogIn, User } from "lucide-react";
 import { useState } from "react";
 
 export function Navbar() {
@@ -31,26 +31,19 @@ export function Navbar() {
             <Link href="/reviews" className="hover:text-amber-500 transition-colors">
               Reviews
             </Link>
-            <Link href="/instructors" className="hover:text-amber-500 transition-colors">
+            <Link href="/instructor/login" className="hover:text-amber-500 transition-colors">
               Instructor
             </Link>
           </div>
 
-          {/* Icons and Auth */}
+          {/* Auth */}
           <div className="hidden md:flex items-center gap-6">
-            <button className="text-slate-800 hover:text-amber-500 transition-colors">
-              <Search className="h-5 w-5" />
-            </button>
-            <button className="text-slate-800 hover:text-amber-500 transition-colors">
-              <ShoppingCart className="h-5 w-5" />
-            </button>
-            
             <div className="flex items-center gap-3">
               <Link
-                href="/login"
+                href="/admin/login"
                 className="text-sm font-bold text-slate-800 hover:text-amber-500 transition-colors px-2"
               >
-                Sign In
+                Sign In Admin
               </Link>
               <Link
                 href="/register"
@@ -89,12 +82,12 @@ export function Navbar() {
             <Link href="/reviews" className="text-slate-700 font-semibold py-2">
               Reviews
             </Link>
-            <Link href="/instructors" className="text-slate-700 font-semibold py-2">
+            <Link href="/instructor/login" className="text-slate-700 font-semibold py-2">
               Instructor
             </Link>
             <hr className="border-slate-100 my-2" />
-            <Link href="/login" className="flex items-center gap-2 text-slate-700 font-semibold py-2">
-              <LogIn className="h-4 w-4" /> Sign In
+            <Link href="/admin/login" className="flex items-center gap-2 text-slate-700 font-semibold py-2">
+              <LogIn className="h-4 w-4" /> Sign In Admin
             </Link>
             <Link href="/register" className="flex items-center gap-2 text-amber-500 font-semibold py-2">
               <User className="h-4 w-4" /> Register

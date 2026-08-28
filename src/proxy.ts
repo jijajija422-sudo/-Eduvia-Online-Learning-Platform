@@ -2,17 +2,19 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSessionFromCookieString } from "./lib/auth";
 
-// Define protected routes and the roles allowed to access them
-const rolePrefixes = {
+// Role required per protected dashboard prefix
+const rolePrefixes: Record<string, string[]> = {
   "/admin": ["ADMIN"],
-  "/instructor": ["ADMIN", "INSTRUCTOR"],
-  "/student": ["ADMIN", "INSTRUCTOR", "STUDENT"],
+  "/instructor": ["INSTRUCTOR", "ADMIN"],
+  "/student": ["STUDENT", "INSTRUCTOR", "ADMIN"],
 };
 
-// Define public routes that shouldn't require authentication (except the base dashboard routes if they match prefixes)
+// Pages anyone may view without being logged in
 const publicRoutes = [
   "/",
   "/login",
+  "/admin/login",
+  "/instructor/login",
   "/register",
   "/forgot-password",
   "/reset-password",
@@ -36,7 +38,17 @@ const publicRoutes = [
   "/verify",
 ];
 
-// Define API routes that have their own auth logic or are public
+// Authenticated users are bounced away from these (to their own dashboard)
+const authPages = [
+  "/login",
+  "/admin/login",
+  "/instructor/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+];
+
+// Public API routes (auth handled inside the route)
 const publicApiRoutes = [
   "/api/auth/login",
   "/api/auth/register",
@@ -53,10 +65,16 @@ const publicApiRoutes = [
   "/api/reviews",
 ];
 
+function dashboardForRole(role: string): string {
+  if (role === "ADMIN") return "/admin";
+  if (role === "INSTRUCTOR") return "/instructor";
+  return "/student";
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Skip static assets, Next.js internals, and public API routes
+  // 1. Static / Next internals / public APIs — never touch
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon.ico") ||
@@ -66,74 +84,59 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. Check if route is public
-  // Exact match for root, or starts with a public route
-  const isPublicRoute = publicRoutes.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
+  const session = await getSessionFromCookieString(request.headers.get("cookie"));
+  const isAuthPage = authPages.some((p) => pathname === p);
+  const isPublicRoute =
+    publicRoutes.some((r) => pathname === r) ||
+    publicRoutes.some((r) => pathname.startsWith(`${r}/`));
 
-  // 3. Get session
-  const cookieHeader = request.headers.get("cookie");
-  const session = await getSessionFromCookieString(cookieHeader);
-
-  // 4. Redirect authenticated users away from auth pages
-  const isAuthPage =
-    pathname === "/login" ||
-    pathname === "/register" ||
-    pathname === "/forgot-password" ||
-    pathname === "/reset-password";
-  
+  // 2. If already signed in and hitting an auth page, send to the right dashboard
   if (isAuthPage && session) {
-    // Redirect based on role
-    if (session.role === "ADMIN") {
-      return NextResponse.redirect(new URL("/admin", request.url));
-    } else if (session.role === "INSTRUCTOR") {
-      return NextResponse.redirect(new URL("/instructor", request.url));
-    } else {
-      return NextResponse.redirect(new URL("/student", request.url));
-    }
+    return NextResponse.redirect(new URL(dashboardForRole(session.role), request.url));
   }
 
-  // 5. Handle role-based protected routes
+  // 3. Auth pages (login/register/reset) are always reachable for guests
+  if (isAuthPage) {
+    return NextResponse.next();
+  }
+
+  // 4. Any other public route — reachable for guests
+  if (isPublicRoute && !session) {
+    return NextResponse.next();
+  }
+
+  // 5. If not logged in and not public — send to the correct login portal
+  if (!session) {
+    const loginPath =
+      pathname.startsWith("/admin")
+        ? "/admin/login"
+        : pathname.startsWith("/instructor")
+        ? "/instructor/login"
+        : "/login";
+    const loginUrl = new URL(loginPath, request.url);
+    loginUrl.searchParams.set("returnUrl", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // 6. Logged in — enforce role on protected prefixes
   for (const [prefix, allowedRoles] of Object.entries(rolePrefixes)) {
     if (pathname.startsWith(prefix)) {
-      if (!session) {
-        // Not logged in -> Redirect to login
-        const loginUrl = new URL("/login", request.url);
-        loginUrl.searchParams.set("callbackUrl", pathname);
-        return NextResponse.redirect(loginUrl);
-      }
-
       if (!allowedRoles.includes(session.role)) {
-        // Logged in but wrong role -> Redirect to unauthorized
         return NextResponse.redirect(new URL("/unauthorized", request.url));
       }
-
-      // If user is suspended/inactive, they can't access protected routes
       if (!session.isActive) {
         return NextResponse.redirect(new URL("/unauthorized", request.url));
       }
-
-      // Allow access
       return NextResponse.next();
     }
   }
 
-  // 6. For any other route, if it's not public and they aren't logged in, redirect to login
-  // Note: Learning routes like /courses/[id]/learn/... should be protected.
-  // We'll protect them here if they aren't in the publicRoutes list.
-  if (!isPublicRoute && !session) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
+  // 7. Logged-in user on a non-protected, non-public route — allow
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    // Apply proxy to all routes except static files and images
     "/((?!_next/static|_next/image|images|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

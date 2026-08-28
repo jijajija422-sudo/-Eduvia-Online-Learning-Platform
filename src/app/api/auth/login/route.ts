@@ -16,12 +16,18 @@ export async function POST(req: Request) {
       );
     }
 
-    const { email, password, rememberMe } = result.data;
+    const { email, password, rememberMe, expectedRole } = result.data;
 
-    // Find user
     const user = await db.user.findUnique({
       where: { email },
     });
+
+    if (user && expectedRole && user.role !== expectedRole) {
+      return NextResponse.json(
+        { error: `Invalid credentials for this login portal. Please use the correct portal for your role.` },
+        { status: 403 }
+      );
+    }
 
     if (!user || !user.passwordHash) {
       // Return a generic error for security
