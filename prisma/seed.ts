@@ -1,11 +1,16 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 import slugify from "slugify";
 import "dotenv/config";
 
-const url = process.env.DATABASE_URL || "file:./dev.db";
-const adapter = new PrismaBetterSqlite3({ url });
+// Prisma 7: the datasource `url` lives in prisma.config.ts. Resolve it from the
+// same env vars here so the seed targets the same database as the running app.
+const url =
+  process.env.DATABASE_URL ||
+  process.env.POSTGRES_PRISMA_URL ||
+  "postgresql://localhost:5432/eduvia?sslmode=require";
+const adapter = new PrismaPg(url);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {

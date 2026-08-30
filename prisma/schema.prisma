@@ -7,7 +7,10 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  // Provider is postgresql. Prisma 7 requires the connection `url` to live in
+  // prisma.config.ts (NOT here) — see prisma.config.ts, which reads
+  // DATABASE_URL / POSTGRES_PRISMA_URL.
+  provider = "postgresql"
 }
 
 // ---------------------------------------------------------------------------

@@ -1,28 +1,18 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-import fs from "fs";
-import path from "path";
 
-// Choose the database adapter based on the DATABASE_URL protocol:
-//   postgresql://...  -> PrismaPg  (production on Vercel)
-//   file:./dev.db     -> PrismaBetterSqlite3 (local development)
-const url = process.env.DATABASE_URL || "file:./dev.db";
-const isPostgres =
-  url.startsWith("postgresql://") || url.startsWith("postgres://");
+// Resolve the database URL. Vercel Postgres exposes POSTGRES_PRISMA_URL in
+// addition to DATABASE_URL, so we accept either. A local placeholder is used
+// only so the PrismaClient can be constructed at build time / before the first
+// query — real connections only happen at request time against the real URL.
+const dbUrl =
+  process.env.DATABASE_URL ||
+  process.env.POSTGRES_PRISMA_URL ||
+  "postgresql://localhost:5432/eduvia?sslmode=require";
 
-let adapter: PrismaPg | PrismaBetterSqlite3;
-
-if (isPostgres) {
-  adapter = new PrismaPg(url);
-} else {
-  const dbPath = url.replace("file:", "");
-  const dbDir = path.dirname(dbPath);
-  if (dbDir && !fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
-  }
-  adapter = new PrismaBetterSqlite3({ url });
-}
+// Prisma 7 keeps the datasource `url` in prisma.config.ts and the schema
+// provider is "postgresql", so we always use the Postgres driver adapter.
+const adapter = new PrismaPg(dbUrl);
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;

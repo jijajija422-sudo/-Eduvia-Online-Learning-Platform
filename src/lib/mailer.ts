@@ -1,30 +1,66 @@
 import nodemailer, { type Transporter } from "nodemailer";
 
-// ─── Lazy SMTP transporter ──────────────────────────────────────────────────
-// We build the transporter only when needed so the app still runs (and tests
-// pass) when SMTP credentials are not configured. When no SMTP host is set we
-// fall back to a "preview" logger instead of throwing.
+// ─── Lazy SMTP transporter with credential verification ───────────────────────
+// The transporter is built only when needed so the app still boots (and tests
+// pass) when SMTP is unconfigured. Before the first real send we call
+// transporter.verify() to validate credentials up front; if verification fails
+// (bad/missing creds, unreachable host) we fall back to a console "preview" log
+// instead of throwing — so email can never crash a request or page load.
 
-let transporter: Transporter | null | undefined;
+type MailerState =
+  | { status: "unconfigured" }
+  | { status: "ready"; transporter: Transporter }
+  | { status: "failed"; error: string };
 
-function getTransporter(): Transporter | null {
-  if (transporter !== undefined) return transporter;
+let mailerState: MailerState | undefined;
 
+interface SmtpConfig {
+  host: string;
+  port: number;
+  secure: boolean;
+  auth?: { user: string; pass: string };
+}
+
+function resolveSmtpConfig(): SmtpConfig | null {
   const host = process.env.SMTP_HOST;
-  if (!host) {
-    transporter = null;
-    return transporter;
+  if (!host) return null;
+  const port = Number(process.env.SMTP_PORT || 587);
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASSWORD;
+  return {
+    host,
+    port,
+    secure: port === 465,
+    auth: user ? { user, pass: pass || "" } : undefined,
+  };
+}
+
+// Builds (and verifies) the transporter once per process. Caches the outcome so
+// we don't re-open a connection on every email, and so a failed verification is
+// remembered and downgraded to preview mode rather than retried each request.
+async function getMailerState(): Promise<MailerState> {
+  if (mailerState !== undefined) return mailerState;
+
+  const cfg = resolveSmtpConfig();
+  if (!cfg) {
+    mailerState = { status: "unconfigured" };
+    return mailerState;
   }
 
-  transporter = nodemailer.createTransport({
-    host,
-    port: Number(process.env.SMTP_PORT || 587),
-    secure: Number(process.env.SMTP_PORT || 587) === 465,
-    auth: process.env.SMTP_USER
-      ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD }
-      : undefined,
-  });
-  return transporter;
+  const transporter = nodemailer.createTransport(cfg);
+  try {
+    // verify() opens a connection and authenticates — this is the "verify
+    // credentials before attempting connections" guard the deployment needs.
+    await transporter.verify();
+    mailerState = { status: "ready", transporter };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(
+      `[mailer] SMTP verification failed (host=${cfg.host}:${cfg.port}): ${message} — falling back to preview logging.`
+    );
+    mailerState = { status: "failed", error: message };
+  }
+  return mailerState;
 }
 
 export interface SendEmailOptions {
@@ -36,10 +72,10 @@ export interface SendEmailOptions {
 
 export async function sendEmail({ to, subject, html, text }: SendEmailOptions): Promise<void> {
   const from = process.env.EMAIL_FROM || "Eduvia <noreply@eduvia.example>";
-  const t = getTransporter();
+  const state = await getMailerState();
 
-  if (!t) {
-    // No SMTP configured — log a preview so development flows are still visible.
+  if (state.status !== "ready") {
+    // Unconfigured or verification failed — log a preview so flows stay visible.
     console.info(
       `[mailer:preview] To: ${to} | Subject: ${subject}\n${text || html.replace(/<[^>]+>/g, "")}`
     );
@@ -47,10 +83,10 @@ export async function sendEmail({ to, subject, html, text }: SendEmailOptions): 
   }
 
   try {
-    await t.sendMail({ from, to, subject, html, text });
+    await state.transporter.sendMail({ from, to, subject, html, text });
   } catch (err) {
-    // Email is never allowed to break a core workflow (enrollment, completion…).
-    console.error("Email send failed:", err);
+    // Email must never break a core workflow (enrollment, completion, certs…).
+    console.error("[mailer] Email send failed:", err);
   }
 }
 
