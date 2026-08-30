@@ -1,12 +1,13 @@
 // Eduvia LMS - Prisma Schema
-// SQLite database for production-ready learning management system
+// Production uses PostgreSQL (Vercel Postgres / Neon). Local dev can use SQLite
+// via DATABASE_URL="file:./dev.db"; the app picks the adapter automatically.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 // ---------------------------------------------------------------------------
