@@ -14,7 +14,7 @@ const isPostgres =
 let adapter: PrismaPg | PrismaBetterSqlite3;
 
 if (isPostgres) {
-  adapter = new PrismaPg({ url });
+  adapter = new PrismaPg(url);
 } else {
   const dbPath = url.replace("file:", "");
   const dbDir = path.dirname(dbPath);
